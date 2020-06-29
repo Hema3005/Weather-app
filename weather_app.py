@@ -76,11 +76,11 @@ def get_records(sqliteConnection,city):
     #to select records from  tabel based on city
     sqlite_select_query = """SELECT * from weather_details where city=?"""
     cursor.execute(sqlite_select_query,[city])
-    row = cursor.fetchall()
-    for elements in row:
-        records=list(elements)
+    records= cursor.fetchall()
     #if records exists
     if len(records):
+        for elements in records:
+            records=list(elements)
         day_exist=check_records(records)
         #if day exist
         if day_exist:
