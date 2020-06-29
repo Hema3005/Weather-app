@@ -1,0 +1,105 @@
+from flask import Flask,render_template,request
+import requests
+import datetime
+from datetime import datetime
+import sqlite3
+from sqlite3 import Error
+
+app = Flask(__name__,template_folder="template",static_folder="static\css")
+
+#To different between timestamp in database and now timestamp and return days
+def check_update(time):
+    datetime_in_db = datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f")
+    now_datetime=datetime.now()
+    day_diff=now_datetime-datetime_in_db
+    secs = day_diff.total_seconds()
+    day=int((secs / 3600)/24)
+    return day
+
+#To convert kelvin to celcius
+def tocelcius(temp):
+    return (round(float(temp) - 273.16,2))
+
+def check_db(city):
+    
+#connection to sqlite
+        sqliteConnection = sqlite3.connect('weather.db')
+        cursor = sqliteConnection.cursor()
+        print("Connected to SQLite")
+    
+    
+#create table if not exisits
+        cursor.execute("CREATE TABLE IF NOT EXISTS weather_details(city text, description text, temp integer, weatherTime real)")
+        sqliteConnection.commit()
+        print("Created Table Successfully")
+   
+#checking the city is present in database using sqlite_select_query
+        sqlite_select_query = """SELECT * from weather_details where city=?"""
+        cursor.execute(sqlite_select_query,[city])
+        records = cursor.fetchall()
+    
+#if city present and convert row into list     
+        if len(records):
+          for row in records:
+            records=list(row)
+#check timestamp updated within 24 hrs using check_update function return days          
+            day_diff=check_update(records[3])
+#if days is present ,updated the city in database and return the record
+            if day_diff:
+#get  current weather details using function 
+              update_record=get_weather(city)
+#query to update in database
+              sql_update_query = """Update weather_details set description =?,temp=?,weatherTime=? where city = ?"""
+              cursor.execute(sql_update_query,(update_record[1],update_record[2],update_record[3],update_record[0]))
+              sqliteConnection.commit()
+              print("Record Updated Successfully ")
+              return update_record
+#if day is not present just return exist  record in database 
+            else :
+              print("Exist record  display Successfully")
+              return records
+#if city is not present in database
+#get weather details using funtion and return records
+#query to insert in database
+#return records
+        else:
+            insert_record=get_weather(city)
+            sql_insert_query="""INSERT INTO weather_details(city,description,temp,weatherTime) VALUES(?, ?, ?, ?)"""
+            cursor.execute(sql_insert_query, insert_record)
+            sqliteConnection.commit()
+            print("Record Inserted Successfully")
+            return insert_record
+
+    
+        
+#function to get location weather detail in url
+def get_weather(city):
+    url="http://api.openweathermap.org/data/2.5/weather?q="+city+"&appid=1f36ce553bcc503168e616137464eae1"
+    json_response=requests.get(url).json()
+    weather_description=json_response["weather"][0]["description"]
+    temp=json_response["main"]["temp"]
+    time=datetime.now()
+    return [city,weather_description,temp,time]
+
+@app.route("/")
+def index():
+    return render_template("search.html")
+
+@app.route("/result",methods =['POST', 'GET'])
+def weather():
+    if request.method == 'POST':
+        location = request.form['city']
+#passing location to check_db function return location weather details
+        record=check_db(location)
+#funtion return celcius value
+        temp=tocelcius(record[2])
+#print records
+        print({"city":record[0],"Weather description":record[1],"temp(in k)":record[2],"temp(in C)":temp})
+
+        return render_template('weather.html',city=record[0],description=record[1],tempk=record[2],tempc=temp,time=record[3]) 
+
+
+
+
+if __name__ == '__main__':
+   app.run(debug = True)
