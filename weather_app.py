@@ -6,7 +6,21 @@ import sqlite3
 from sqlite3 import Error
 
 #flask object
-app = Flask(__name__,template_folder="template")
+app = Flask(__name__,template_folder="template",static_folder="static\css")
+
+def check_records(records):
+    #to check timestamp updated within 24 hrs using check_update function return days          
+    day_diff=check_update(records[3])
+    return check_day(day_diff)
+
+#within 24hrs
+def check_day(day_diff):
+    #if day is exist
+    if day_diff:
+        return True   
+    #if day is not exist 
+    else :
+        return False
 
 #To different between timestamp in database and now timestamp and return days
 def check_update(time):
@@ -62,30 +76,29 @@ def get_records(sqliteConnection,city):
     #to select records from  tabel based on city
     sqlite_select_query = """SELECT * from weather_details where city=?"""
     cursor.execute(sqlite_select_query,[city])
-    records = cursor.fetchall()
+    row = cursor.fetchall()
+    for elements in row:
+        records=list(elements)
     #if records exists
     if len(records):
-            for row in records:
-                records=list(row)
-            #to check timestamp updated within 24 hrs using check_update function return days          
-            day_diff=check_update(records[3])
-             #if days is exists
-            if day_diff:
+        day_exist=check_records(records)
+        #if day exist
+        if day_exist:
             #to get current weather details using function 
-                update_record=get_weather(city)
-                update_db(sqliteConnection,update_record)
-                return update_record
-            #if day is not exist 
-            else :
-              print("Exist record  display Successfully")
-              return records
-
+            update_record=get_weather(city)
+            update_db(sqliteConnection,update_record)
+            return update_record
+        #not exist
+        else:
+            print("Exist record  display Successfully")
+            print(records)
+            return records
     #if city is not exist
     else:
-            #get weather details 
-            insert_record=get_weather(city)
-            insert_db(sqliteConnection,insert_record)
-            return insert_record
+        #get weather details 
+        insert_record=get_weather(city)
+        insert_db(sqliteConnection,insert_record)
+        return insert_record
 
       
 #to get location weather detail in url
@@ -115,8 +128,6 @@ def weather():
         print({"city":record[0],"Weather description":record[1],"temp(in k)":record[2],"temp(in C)":temp})
 
         return render_template('weather.html',city=record[0],description=record[1],tempk=record[2],tempc=temp,time=record[3]) 
-
-
 
 
 if __name__ == '__main__':
