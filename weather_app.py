@@ -91,7 +91,6 @@ def get_records(sqliteConnection,city):
         #not exist
         else:
             print("Exist record  display Successfully")
-            print(records)
             return records
     #if city is not exist
     else:
