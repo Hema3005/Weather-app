@@ -6,7 +6,7 @@ import sqlite3
 from sqlite3 import Error
 
 #flask object
-app = Flask(__name__,template_folder="template",static_folder="static\css")
+app = Flask(__name__,template_folder="template")
 
 #To different between timestamp in database and now timestamp and return days
 def check_update(time):
