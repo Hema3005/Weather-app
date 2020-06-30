@@ -115,8 +115,10 @@ def index():
 
 @app.route("/result",methods =['POST', 'GET'])
 def weather():
+ try:
     if request.method == 'POST':
-        location = request.form['city'].lower()
+      location = request.form['city'].lower()
+      if location:
         #connect sqlite
         sqliteConnection=connect_db(location)
         #get records from table based on location
@@ -125,9 +127,12 @@ def weather():
         temp=tocelcius(record[2])
         #print records
         print({"city":record[0],"Weather description":record[1],"temp(in k)":record[2],"temp(in C)":temp})
-
         return render_template('weather.html',city=record[0],description=record[1],tempk=record[2],tempc=temp,time=record[3]) 
-
+      else:
+        return "<h3>You should provide city name. <h3> <a href=\"/\">Click here to Back Home</a>"
+ except:
+      print("city not found")
+      return "<h3> City name is not found<h3> <a href=\"/\">Click here to Back Home</a>"
 
 if __name__ == '__main__':
    app.run(debug = True)
