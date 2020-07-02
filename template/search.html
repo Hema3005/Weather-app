@@ -1,57 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" href="data:,">
-    
+  <link rel="icon" href="data:,">
   <title>weather report</title>
-  
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
-</head>
+  </head>
 <style>
+h1,h5,h6{
+  margin-bottom: 1.375em;
+  color:whitesmoke;
+  font-weight: 100;
+  font-size: 10000;
+  text-transform: capitalize;
+}
+p{
+  margin-bottom: 1.375em;
+  color:whitesmoke;
+  font-weight: 100;
+  font-size: 10000;
+  font-style: italic;
+  font-weight: bolder;
+}
 body {
   
   margin: 0 auto;
   color: #161616;
   font-family: 'Times New Roman', Times, serif;
   text-align: center;
+  background-size: 450px;
   background-color: currentColor;
+  background-image: url("static/img.jpg");
+  background-repeat: no-repeat;
+  background-attachment:fixed; 
+  background-position: center;   
 }
-h1,h5,h6 {
-margin-bottom: 1.375em;
-color:whitesmoke;
-font-weight: 100;
-font-size: 10000;
-text-transform: capitalize;
-} 
 
 </style>
 </head>
-    <body>
+    
+      <body>
         <div class="container">
             <div class='text-center'>
                 <h1>WEATHER APP</h1>
             </div>
-            <centre class="row">
+            
+            {% if error %}
+            <p><strong>Error:</strong> {{ error }}
+            {% endif %}
+            
+              
               <!-- form to get city name as input from user -->
-                <form action=" http://127.0.0.1:5000/result" method="post" class="col-md-6 col-md-offset-3">
-                  <div class="input-group">
-                    <input type="text" class="form-control" name="city" placeholder="Enter city">
+                <form action=" http://127.0.0.1:5000/result" method="post" class="col-lg-12 offset-lg-0">
+                  <div class="row justify-content-center">
+                    <input type="text" id="city" name="city" placeholder="Enter city"  required> 
                     
-                    <div class="input-group-btn">
-                      <button class="btn btn-primary" type="submit">
-                        <i class="glyphicon glyphicon-search"></i>search
+                      <div class="input-group-btn">
+                      <button class="btn btn-primary" type="submit" id="submit" value="Submit" onclick="return input_present()">
+                        <i class="glyphicon glyphicon-search"></i>Search
                       </button>
-                    </div>
-                    <form>
-              </centre>
-                <br>
-            </form>
-        
-        </form>
-    </body>
+                      </div>
+                  </div>       
+                </form>
+            </div>    
+            
+<script>
+    function input_present(input) {
+    var x = document.getElementById("city").value;
+    if (x) {
+            return True;
+    }
+    alert("Enter city name ");
+    return false
+    }
+</script>
+       </body>
+       
 </html>
