@@ -213,7 +213,7 @@ animation: spin 16s linear infinite reverse;
 }
 
 
-/* Animations */ 
+/*  Animations */ 
 
 @keyframes spin {
 100% { transform: rotate(360deg); }
