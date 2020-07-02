@@ -6,10 +6,10 @@ import sqlite3
 from sqlite3 import Error
 
 #flask object
-app = Flask(__name__,template_folder="template",static_folder="static\css")
+app = Flask(__name__,template_folder="template",static_folder="static")
 
 def check_records(records):
-    #to check timestamp updated within 24 hrs using check_update function return days          
+    #to check timestamp updated within 24 hrs using check_update function return day         
     day_diff=check_update(records[3])
     return check_day(day_diff)
 
@@ -32,8 +32,10 @@ def check_update(time):
     return day
 
 #To convert kelvin to celcius
-def tocelcius(temp):
-    return (round(float(temp) - 273.16,2))
+def tocelcius_tofahrenheit(temp):
+    celcisus_temp=round(float(temp) - 273.16,2)
+    fahrenheit_temp = round(float(celcisus_temp * ( 9 / 5 ) + 32))
+    return [fahrenheit_temp,celcisus_temp]
 
 #connect to sqlite connection
 def connect_db(city):    
@@ -50,26 +52,20 @@ def connect_db(city):
 
 #update weather details into table
 def update_db(sqliteConnection,update_record):
-        try:
             cursor = sqliteConnection.cursor()
             sql_update_query = """Update weather_details set description =?,temp=?,weatherTime=? where city = ?"""
             cursor.execute(sql_update_query,(update_record[1],update_record[2],update_record[3],update_record[0]))
             sqliteConnection.commit()
             print("Record Updated Successfully ") 
-        except sqlite3.Error as error:
-            print("Failed to update sqlite table", error)
 
 #insert new weather details into table
 def insert_db(sqliteConnection,insert_record):
-    try:
         cursor = sqliteConnection.cursor()
         sql_insert_query="""INSERT INTO weather_details(city,description,temp,weatherTime) VALUES(?, ?, ?, ?)"""
         cursor.execute(sql_insert_query, insert_record)
         sqliteConnection.commit()
         print("Record Inserted Successfully")
-    except sqlite3.Error as error:
-        print("Failed to insert sqlite table", error)
-
+    
 # function to get records from table based on location     
 def get_records(sqliteConnection,city):
     cursor = sqliteConnection.cursor()
@@ -77,6 +73,7 @@ def get_records(sqliteConnection,city):
     sqlite_select_query = """SELECT * from weather_details where city=?"""
     cursor.execute(sqlite_select_query,[city])
     records= cursor.fetchall()
+    
     #if records exists
     if len(records):
         for elements in records:
@@ -111,28 +108,34 @@ def get_weather(city):
 
 @app.route("/")
 def index():
-    return render_template("search.html")
+    error = None
+    return render_template("search.html",error=error)
 
 @app.route("/result",methods =['POST', 'GET'])
 def weather():
  try:
     if request.method == 'POST':
-      location = request.form['city'].lower()
-      if location:
+        location = request.form['city'].lower()
+
         #connect sqlite
         sqliteConnection=connect_db(location)
         #get records from table based on location
         record=get_records(sqliteConnection,location)
         #get celcius value
-        temp=tocelcius(record[2])
+        temp=tocelcius_tofahrenheit(record[2])
         #print records
-        print({"city":record[0],"Weather description":record[1],"temp(in k)":record[2],"temp(in C)":temp})
-        return render_template('weather.html',city=record[0],description=record[1],tempk=record[2],tempc=temp,time=record[3]) 
-      else:
-        return "<h3>You should provide city name. <h3> <a href=\"/\">Click here to Back Home</a>"
- except:
-      print("city not found")
-      return "<h3> City name is not found<h3> <a href=\"/\">Click here to Back Home</a>"
+        print({"city":record[0],"Weather description":record[1],"temp(in F)":temp[0],"temp(in C)":temp[1]})
+        return render_template('weather.html',city=record[0],description=record[1],tempk=temp[0],tempc=temp[1],time=record[3]) 
+   
+ except requests.exceptions.ConnectionError:
+      print("No network connection")
+      error="No network connection.Try again!!!!"
+      return render_template('search.html',error=error)
+      #return " <body style = \"background-color:#141414;text-align:center\"> <h3 style = \"color: whitesmoke\"> City name is not found<h3> <a href=\"/\">Click here to Back Home</a></body>"
+ except KeyError:
+      print("Invalid city name")
+      error="Invalid city name.Try again!!!!"
+      return render_template('search.html',error=error)
 
 if __name__ == '__main__':
    app.run(debug = True)
