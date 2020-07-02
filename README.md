@@ -30,7 +30,7 @@ or
     
 ## Usage
 
-Visit the following link:"http://127.0.0.1:5000/"
+Visit the following link:`http://127.0.0.1:5000/`
     
 ## App provides
 You can see required city 
